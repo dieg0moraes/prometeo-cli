@@ -1,4 +1,4 @@
-from pmo.exceptions import ExistsSessionException
+from exceptions import ExistsSessionException
 
 class SessionHandler:
 

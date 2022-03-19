@@ -1,7 +1,4 @@
-import exceptions
-
-
-class ExistsSessionException(exceptions.Exception):
+class ExistsSessionException(Exception):
 
     def __init__(self, message):
         self.message = message

@@ -1,7 +1,7 @@
 import os
 
 from client.prometeo_client import PrometeoClient
-from pmo.helpers import SessionHandler
+from helpers import SessionHandler
 from pmo.config import PROMETEO_API_KEY
 
 
