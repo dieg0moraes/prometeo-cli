@@ -1,6 +1,10 @@
 import os
+import typer
+import prometeo
 
+from getpass import getpass
 from datetime import datetime
+
 from client.prometeo_client import PrometeoClient
 from helpers import SessionHandler
 from pmo.config import PROMETEO_API_KEY
@@ -11,32 +15,65 @@ PROMETEO_SESSION = 'PROMETEO_SESSION'
 client = PrometeoClient(PROMETEO_API_KEY)
 session = SessionHandler()
 
-def login(provider: str, username: str, password: str) -> None:
-    if session.exists_session():
-        raise Exception('you have a session started')
 
-    session_key = client.login(provider, username, password)
-    session.create_session(session_key)
+def login(provider: str, username: str, password: str, interactive = False) -> None:
+    try:
+        if session.exists_session():
+            confirm = typer.confirm('You have a session stored, want to login in a new one?')
+
+            if confirm == False:
+                raise typer.Exit('Session already started')
+
+            session.end_session()
+
+        if interactive:
+            typer.echo("Remeber that you can set the enviromental variables \n"
+                "PROMETEO_PROVIDER, PROMETEO_USERNAME, PROMETEO_PASSWORD \n"
+            )
+            provider = typer.prompt('Provider')
+            username = typer.prompt('Username')
+            password = getpass()
+
+        session_key = client.login(provider, username, password)
+        session.create_session(session_key)
+    except (prometeo.exceptions.WrongCredentialsError, KeyError) as e:
+        raise typer.Exit('Wrong credentials')
+
+    except prometeo.exceptions.UnauthorizedError as e:
+        raise typer.Exit('Unknown provider')
+
 
 
 def logout() -> None:
-    banking_session = client.banking.get_session(
-            session.retrieve_session()
-    )
-    banking_session.logout()
-    session.end_session()
+    try:
+        banking_session = client.banking.get_session(
+                session.retrieve_session()
+        )
+        banking_session.logout()
+        session.end_session()
+
+    except FileNotFoundError as e:
+        raise typer.Exit('Session already terminated')
 
 
 def get_accounts():
-    client = PrometeoClient(PROMETEO_API_KEY)
-    banking_session = client.banking.get_session(
-            session.retrieve_session()
-    )
-    return banking_session.get_accounts()
+    try:
+        client = PrometeoClient(PROMETEO_API_KEY)
+        banking_session = client.banking.get_session(
+                session.retrieve_session()
+        )
+        return banking_session.get_accounts()
 
-def get_account_movements(account):
+    except prometeo.exceptions.InvalidSessionKeyError as e:
+        session.end_session()
+        raise typer.Exit('Invalid session please login again')
+
+    except FileNotFoundError as e:
+        raise typer.Exit('Session already terminated')
+
+
+def get_account_movements(account, start_date, end_date):
     accounts = get_accounts()
     account = next(acc for acc in accounts if acc.number == account)
-    return account.get_movements(
-            datetime(2019, 2, 1), datetime(2019, 4, 1))
+    return account.get_movements(start_date, end_date)
 

@@ -20,29 +20,35 @@ class SessionHandler:
             print(e)
 
 
-    def _exists_file(self):
+    def _exists_file(self, path):
         try:
-            with open(self._path) as a:
+            with open(path) as a:
                 return True
         except FileNotFoundError:
             return False
 
+    def _open_file(self, path, mode):
+        if self._exists_file(path):
+            return open(path, mode)
+        else:
+            raise FileNotFoundError('Session missing')
+
     def _open_file_x(self):
-        return open(self._path)
+        return self._open_file(self._path, 'x')
 
     def _open_file_w(self):
-        return open(self._path, 'w')
+        return self._open_file(self._path, 'w')
 
     def _open_file_r(self):
-        return open(self._path, 'r')
+        return self._open_file(self._path, 'r')
 
 
     def _create_file_if_not_exists(self):
-        if not self._exists_file():
+        if not self._exists_file(self._path):
            return self._create_file();
 
     def exists_session(self) -> bool:
-        if self._exists_file():
+        if self._exists_file(self._path):
             try:
                 with self._open_file_r() as fs:
                     lines = fs.readlines()
@@ -50,7 +56,6 @@ class SessionHandler:
                     (key, session) = line.split('=')
                     return key == self._session_key
             except Exception:
-                print('File exists but no session registered')
                 return False
 
         return False
@@ -59,7 +64,6 @@ class SessionHandler:
     def create_session(self, value):
         if self.exists_session():
             raise ExistsSessionException('')
-
         try:
             self._create_file_if_not_exists()
             with self._open_file_w() as fs:
@@ -68,9 +72,10 @@ class SessionHandler:
             pass
 
     def end_session(self):
-        session = self.retrieve_session()
-        os.remove(self._path)
-        return session
+        if self.exists_session():
+            session = self.retrieve_session()
+            os.remove(self._path)
+            return session
 
 
 
