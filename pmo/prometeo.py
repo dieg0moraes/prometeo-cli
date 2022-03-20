@@ -5,6 +5,7 @@ This module provides the Prometeo CLI.
 
 import typer
 
+from datetime import datetime
 from typing import Optional
 from pathlib import Path
 from typing import Optional
@@ -29,16 +30,32 @@ def _provider_callback(value: str):
 
 @app.command()
 def login(
-    username: str,
-    provider: str,
-    password: str
+    username: str = typer.Option(None, envvar='PROMETEO_USERNAME'),
+    provider: str = typer.Option(None, envvar='PROMETEO_PROVIDER'),
+    password: str = typer.Option(None, envvar='PROMETEO_PASSWORD'),
+    interactive: bool = typer.Option(False, help='Start interactive login')
 ) -> None:
     """
-    Login
+    Start a banking session
     """
     typer.echo('Loggin in')
-    prometeo_controller.login(provider, username, password)
-    typer.echo('Logged in succesfully')
+
+    if interactive:
+        prometeo_controller.login(provider, username, password, interactive)
+
+    else:
+        if not username:
+            raise typer.Exit('Username not provided')
+
+        if not password:
+            raise typer.Exit('Password not provided')
+
+        if not provider:
+            raise typer.Exit('Provider not provided')
+
+        prometeo_controller.login(provider, username, password, interactive)
+
+    raise typer.Exit('Logged in succesfully')
 
 
 
@@ -62,6 +79,18 @@ def accounts(
     printer = TablePrinter()
     printer.print_accounts(accounts)
 
+def date_callback(value):
+    if value is None:
+        raise typer.BadParameter('Date cannot be null')
+    return value
+
+def validate_movements_params(card, account):
+    if account == None and card == None:
+        raise typer.Exit('Must select one option')
+
+    if account and card:
+        raise typer.Exit('Must select only one option')
+
 @app.command()
 def movements(
     account: str = typer.Option(
@@ -69,19 +98,17 @@ def movements(
     ),
     card: str = typer.Option(
         None, '--card', '-c'
-    )
+    ),
+    start_date: datetime = typer.Option(None, formats=["%Y-%m-%d"], callback=date_callback),
+    end_date: datetime = typer.Option(None, formats=["%Y-%m-%d"], callback=date_callback)
 ) -> None:
     """
     Get accounts
     """
-    if account == None and card == None:
-        raise typer.Exit('Must select one option')
-
-    if account and card:
-        raise typer.Exit('Must select only one option')
+    validate_movements_params(card, account)
 
     if account and not card:
-        movements = prometeo_controller.get_account_movements(account)
+        movements = prometeo_controller.get_account_movements(account, start_date, end_date)
 
     if card and not account:
         movements = prometeo_controller.get_card_movements(card)
