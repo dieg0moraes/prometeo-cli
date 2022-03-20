@@ -19,18 +19,20 @@ class ClientWrapper(prometeo.Client):
         return self._banking
 
 
-class PrometeoClient(prometeo.Client):
+class PrometeoClient(ClientWrapper):
 
     def __init__(self, api_key):
-        self._api_key = api_key
+        super().__init__(api_key)
         self._client = ClientWrapper(api_key)
-        self._session = None
 
     def login(self, provider, username, password, **kwargs):
-        self._session = self._client.banking.login(provider, username, password, **kwargs)
-        return self._session.get_session_key()
+        session = self._client.banking.login(provider, username, password, **kwargs)
+        return session.get_session_key()
 
-    def get_session(self):
-        return self._session
+    def logout(self):
+        self._client.banking.logout()
+
+
+
 
 

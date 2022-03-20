@@ -11,6 +11,7 @@ from typing import Optional
 
 from pmo import __app_name__, __version__
 from controllers import prometeo_controller
+from helpers import TablePrinter
 
 
 app = typer.Typer()
@@ -33,18 +34,60 @@ def login(
     password: str
 ) -> None:
     """
-    Initialize the to-do database.
+    Login
     """
+    typer.echo('Loggin in')
     prometeo_controller.login(provider, username, password)
+    typer.echo('Logged in succesfully')
+
+
+
+@app.command()
+def logout() -> None:
+    """
+    Logout
+    """
+    typer.echo('Loggin out')
+    prometeo_controller.logout()
+    typer.echo('Logged out')
 
 
 @app.command()
 def accounts(
 ) -> None:
     """
-    Initialize the to-do database.
+    Get accounts
     """
-    prometeo_controller.get_accounts()
+    accounts = prometeo_controller.get_accounts()
+    printer = TablePrinter()
+    printer.print_accounts(accounts)
+
+@app.command()
+def movements(
+    account: str = typer.Option(
+        None,'--account', '-a'
+    ),
+    card: str = typer.Option(
+        None, '--card', '-c'
+    )
+) -> None:
+    """
+    Get accounts
+    """
+    if account == None and card == None:
+        raise typer.Exit('Must select one option')
+
+    if account and card:
+        raise typer.Exit('Must select only one option')
+
+    if account and not card:
+        movements = prometeo_controller.get_account_movements(account)
+
+    if card and not account:
+        movements = prometeo_controller.get_card_movements(card)
+
+    printer = TablePrinter()
+    printer.print_movements(movements[:10])
 
 
 def _version_callback(value: bool) -> None:
