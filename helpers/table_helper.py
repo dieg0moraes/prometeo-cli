@@ -35,3 +35,20 @@ class TablePrinter:
         self._console.print(table)
 
 
+    def print_cards(self, cards):
+        table = Table(show_header=True, header_style="bold magenta")
+        table.add_column('Id')
+        table.add_column('Balance USD')
+        table.add_column('Balance Local')
+        table.add_column('Due date')
+        table.add_column('Name')
+        table.add_column('Number')
+        for card in cards:
+            table.add_row(
+                str(card.id), str(card.balance_dollar), str(card.balance_local),
+                str(card.due_date), card.name, str(card.number)
+            )
+
+        self._console.print(table)
+
+

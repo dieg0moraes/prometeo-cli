@@ -17,15 +17,17 @@ from helpers import TablePrinter
 
 app = typer.Typer()
 
+def date_callback(value):
+    if value is None:
+        raise typer.BadParameter('Date cannot be null')
+    return value
 
-def _username_callback(value: str):
-    pass
+def validate_movements_params(card, account):
+    if account == None and card == None:
+        raise typer.Exit('Must select one option')
 
-def _password_callback(value: str):
-    pass
-
-def _provider_callback(value: str):
-    pass
+    if account and card:
+        raise typer.Exit('Must select only one option')
 
 
 @app.command()
@@ -79,17 +81,16 @@ def accounts(
     printer = TablePrinter()
     printer.print_accounts(accounts)
 
-def date_callback(value):
-    if value is None:
-        raise typer.BadParameter('Date cannot be null')
-    return value
+@app.command()
+def cards(
+) -> None:
+    """
+    Get credit cards
+    """
+    cards = prometeo_controller.get_cards()
+    printer = TablePrinter()
+    printer.print_cards(cards)
 
-def validate_movements_params(card, account):
-    if account == None and card == None:
-        raise typer.Exit('Must select one option')
-
-    if account and card:
-        raise typer.Exit('Must select only one option')
 
 @app.command()
 def movements(
@@ -100,10 +101,13 @@ def movements(
         None, '--card', '-c'
     ),
     start_date: datetime = typer.Option(None, formats=["%Y-%m-%d"], callback=date_callback),
-    end_date: datetime = typer.Option(None, formats=["%Y-%m-%d"], callback=date_callback)
+    end_date: datetime = typer.Option(None, formats=["%Y-%m-%d"], callback=date_callback),
+    currency: str = typer.Option(
+        None, '--currency', '-cu'
+    )
 ) -> None:
     """
-    Get accounts
+    Get movements
     """
     validate_movements_params(card, account)
 
@@ -111,7 +115,9 @@ def movements(
         movements = prometeo_controller.get_account_movements(account, start_date, end_date)
 
     if card and not account:
-        movements = prometeo_controller.get_card_movements(card)
+        if not currency:
+            raise typer.Exit('Must enter currency')
+        movements = prometeo_controller.get_card_movements(card, start_date, end_date, currency)
 
     printer = TablePrinter()
     printer.print_movements(movements[:10])
