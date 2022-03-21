@@ -88,3 +88,8 @@ def get_card_movements(card_id, start_date, end_date, currency):
     cards = get_cards()
     card = next(ca for ca in cards if ca.id == card_id)
     return card.get_movements(currency, start_date, end_date)
+
+
+def get_providers():
+    banking = client.banking
+    return banking.get_providers()

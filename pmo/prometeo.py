@@ -123,6 +123,13 @@ def movements(
     printer.print_movements(movements[:10])
 
 
+
+@app.command()
+def providers():
+    providers = prometeo_controller.get_providers()
+    printer = TablePrinter()
+    printer.print_providers(providers)
+
 def _version_callback(value: bool) -> None:
     if value:
         typer.echo(f"{__app_name__} v{__version__}")
