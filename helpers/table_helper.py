@@ -52,3 +52,16 @@ class TablePrinter:
         self._console.print(table)
 
 
+    def print_providers(self, providers):
+        table = Table(show_header=True, header_style="bold magenta")
+        table.add_column('Code')
+        table.add_column('Country')
+        table.add_column('Name')
+        for provider in providers:
+            table.add_row(
+                provider.code, provider.country, provider.name
+            )
+
+        self._console.print(table)
+
+
