@@ -6,17 +6,18 @@ from getpass import getpass
 from datetime import datetime
 
 from client.prometeo_client import PrometeoClient
-from helpers import SessionHandler
-from pmo.config import PROMETEO_API_KEY
+from helpers import SessionHandler, Profiler
 
 
 PROMETEO_SESSION = 'PROMETEO_SESSION'
 
-client = PrometeoClient(PROMETEO_API_KEY)
+
 session = SessionHandler()
 
 
-def login(provider: str, username: str, password: str, interactive = False) -> None:
+def login(environment: str, provider: str, interactive = False) -> None:
+    profiler = Profiler()
+
     try:
         if session.exists_session():
             confirm = typer.confirm('You have a session stored, want to login in a new one?')
@@ -27,15 +28,17 @@ def login(provider: str, username: str, password: str, interactive = False) -> N
             session.end_session()
 
         if interactive:
-            typer.echo("Remeber that you can set the enviromental variables \n"
-                "PROMETEO_PROVIDER, PROMETEO_USERNAME, PROMETEO_PASSWORD \n"
-            )
             provider = typer.prompt('Provider')
             username = typer.prompt('Username')
             password = getpass()
+        else:
+            username, password = profiler.get_credentials(provider)
 
+        api_key = profiler.get_configuration(environment)
+        client = PrometeoClient(api_key)
         session_key = client.login(provider, username, password)
         session.create_session(session_key)
+
     except (prometeo.exceptions.WrongCredentialsError, KeyError) as e:
         raise typer.Exit('Wrong credentials')
 
