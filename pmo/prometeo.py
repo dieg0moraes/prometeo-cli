@@ -16,6 +16,7 @@ from helpers import TablePrinter, Profiler
 
 
 app = typer.Typer()
+controller = prometeo_controller.PrometeoActionsController()
 
 def date_callback(value):
     if value is None:
@@ -33,7 +34,6 @@ def validate_movements_params(card, account):
 
 @app.command()
 def login(
-    env: str = typer.Option(None, envvar='PROMETEO_ENVIRONMENT'),
     provider: str = typer.Option(None, envvar='PROMETEO_PROVIDER'),
     interactive: bool = typer.Option(False)
 ) -> None:
@@ -42,20 +42,14 @@ def login(
     """
     typer.echo('Loggin in')
 
-    if env is None:
-        raise typer.Exit('Must set an PROMETEO_ENVIRONMENT as envvar')
-
     if interactive:
-        prometeo_controller.login(env, provider, interactive)
+        controller.login(provider, interactive)
         raise typer.Exit('logged in succesfully')
 
     if provider is None:
         raise typer.Exit('You must specify a provider to login with --provider')
 
-    if env is None:
-        raise typer.Exit('You must specify an environment to use with --env')
-
-    prometeo_controller.login(env, provider, interactive)
+    controller.login(provider, interactive)
 
     raise typer.Exit('Logged in succesfully')
 
@@ -67,7 +61,7 @@ def logout() -> None:
     Logout
     """
     typer.echo('Loggin out')
-    prometeo_controller.logout()
+    controller.logout()
     typer.echo('Logged out')
 
 
@@ -76,7 +70,7 @@ def accounts() -> None:
     """
     Get accounts
     """
-    accounts = prometeo_controller.get_accounts()
+    accounts = controller.get_accounts()
     printer = TablePrinter()
     printer.print_accounts(accounts)
 
@@ -85,7 +79,7 @@ def cards() -> None:
     """
     Get credit cards
     """
-    cards = prometeo_controller.get_cards()
+    cards = controller.get_cards()
     printer = TablePrinter()
     printer.print_cards(cards)
 
@@ -114,12 +108,12 @@ def movements(
     validate_movements_params(card, account)
 
     if account and not card:
-        movements = prometeo_controller.get_account_movements(account, start_date, end_date)
+        movements = controller.get_account_movements(account, start_date, end_date)
 
     if card and not account:
         if not currency:
             raise typer.Exit('Must enter currency')
-        movements = prometeo_controller.get_card_movements(card, start_date, end_date, currency)
+        movements = controller.get_card_movements(card, start_date, end_date, currency)
 
     printer = TablePrinter()
     printer.print_movements(movements)
@@ -127,14 +121,14 @@ def movements(
 
 @app.command()
 def providers():
-    providers = prometeo_controller.get_providers()
+    providers = controller.get_providers()
     printer = TablePrinter()
     printer.print_providers(providers)
 
 
 @app.command()
 def config():
-    providers = prometeo_controller.get_providers()
+    providers = controller.get_providers()
     printer = TablePrinter()
     printer.print_providers(providers)
 
@@ -155,7 +149,5 @@ def main(
         is_eager=True,
     )
 ) -> None:
-    profiler = Profiler()
-    profiler.initialize()
     return
 

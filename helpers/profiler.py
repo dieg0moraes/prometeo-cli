@@ -2,6 +2,7 @@ import os
 import configparser
 
 from pathlib import Path
+from exceptions import ProviderNotFound
 
 class Profiler():
 
@@ -49,7 +50,7 @@ class Profiler():
         config = configparser.ConfigParser()
         config.read(self._credentials_path)
         if provider not in config.sections():
-            raise Exception(provider, 'Does not exists')
+            raise ProviderNotFound(f'{provider} not found configuration for this provider')
 
         return (config[provider]['username'], config[provider]['password'])
 
