@@ -4,10 +4,6 @@ from helpers import Crypto, Profiler
 
 class ConfigurationController():
 
-    def __init__(self):
-        pass
-
-
     def add_new_credential(self):
         provider = typer.prompt('Plese enter the provider id for the new configuration')
         username = typer.prompt('Please enter the username')
@@ -29,3 +25,4 @@ class ConfigurationController():
         api_key = typer.prompt('Please enter the api_key')
         profiler = Profiler()
         profiler.add_new_environment(environment, api_key)
+

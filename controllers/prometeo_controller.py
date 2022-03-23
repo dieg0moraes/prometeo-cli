@@ -16,13 +16,16 @@ class PrometeoActionsController():
     def __init__(self):
         self._profiler = Profiler()
         self._environment = os.environ.get('PROMETEO_ENVIRONMENT')
+        self._api_key = None
 
         if self._environment is None:
             raise typer.Exit('Please set PROMETEO_ENVIRONMENT')
+        try:
+            self._api_key = self._profiler.get_configuration(self._environment)
+        except:
+            raise typer.Exit('no config found')
 
-        api_key = self._profiler.get_configuration(self._environment)
-
-        self._client = PrometeoClient(api_key, self._environment)
+        self._client = PrometeoClient(self._api_key, self._environment)
 
     def login(self, provider: str, interactive = False) -> None:
         passphrase = typer.prompt('Please enter your passphrase', hide_input=True, confirmation_prompt=True)
