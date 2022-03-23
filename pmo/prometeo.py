@@ -11,12 +11,13 @@ from pathlib import Path
 from typing import Optional
 
 from pmo import __app_name__, __version__
-from controllers import prometeo_controller
+from controllers import prometeo_controller, configuration_controller
 from helpers import TablePrinter, Profiler
 
 
 app = typer.Typer()
 controller = prometeo_controller.PrometeoActionsController()
+config_controller = configuration_controller.ConfigurationController()
 
 def date_callback(value):
     if value is None:
@@ -127,16 +128,25 @@ def providers():
 
 
 @app.command()
-def config():
-    providers = controller.get_providers()
-    printer = TablePrinter()
-    printer.print_providers(providers)
+def config(credential: bool = typer.Option(False), environment: bool = typer.Option(False)):
+
+    if credential and environment:
+        raise typer.Exit('Please select only one option')
+
+    if credential:
+        config_controller.add_new_credential()
+        raise typer.Exit('Credential saved')
+
+    if environment:
+        config_controller.add_new_environment()
+        raise typer.Exit('New environment saved')
 
 
 def _version_callback(value: bool) -> None:
     if value:
         typer.echo(f"{__app_name__} v{__version__}")
         raise typer.Exit()
+
 
 
 @app.callback()

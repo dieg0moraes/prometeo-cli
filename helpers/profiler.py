@@ -3,6 +3,7 @@ import configparser
 
 from pathlib import Path
 from exceptions import ProviderNotFound
+from .crypto import Crypto
 
 class Profiler():
 
@@ -42,17 +43,32 @@ class Profiler():
 
     def _create_profile_file(self):
         with open(self._credentials_path, 'a') as fs:
-            fs.write('[test]\n')
+            fs.write('[example]\n')
             fs.write('username=1234\n')
             fs.write('password=12345\n')
 
-    def get_credentials(self, provider):
+    def get_credentials(self, provider, passphrase):
         config = configparser.ConfigParser()
         config.read(self._credentials_path)
         if provider not in config.sections():
             raise ProviderNotFound(f'{provider} not found configuration for this provider')
 
-        return (config[provider]['username'], config[provider]['password'])
+        crypto = Crypto()
+        b_text = crypto.decrypt(config[provider]['password'], passphrase)
+
+        return (config[provider]['username'], b_text.decode())
+
+
+    def exists_section_credentials(self, provider):
+        config = configparser.ConfigParser()
+        config.read(self._credentials_path)
+        return provider in config.sections()
+
+    def exists_section_envs(self, env):
+        config = configparser.ConfigParser()
+        config.read(self._config_path)
+        return env in config.sections()
+
 
     def get_configuration(self, profile):
         config = configparser.ConfigParser()
@@ -61,6 +77,40 @@ class Profiler():
             raise Exception(profile, 'Does not exists')
 
         return config[profile]['api_key']
+
+
+    def add_new_credential(self, provider, username, password):
+        if self.exists_section_credentials(provider):
+            config = configparser.ConfigParser()
+            config.read(self._credentials_path)
+            # modify
+            config[provider]['username'] = username
+            config[provider]['password'] = password
+
+            # override
+            with open(self._credentials_path, 'w') as fs:
+                config.write(fs)
+        else:
+            with open(self._credentials_path, 'a') as fs:
+                fs.write(f'[{provider}]\n')
+                fs.write(f'username={username}\n')
+                fs.write(f'password={password}\n')
+
+    def add_new_environment(self, environment, api_key):
+        if self.exists_section_envs(environment):
+            config = configparser.ConfigParser()
+            config.read(self._config_path)
+            # modify
+            config[environment]['api_key'] = api_key
+
+            # override
+            with open(self._config_path, 'w') as fs:
+                config.write(fs)
+        else:
+            with open(self._config_path, 'a') as fs:
+                fs.write(f'[{environment}]\n')
+                fs.write(f'api_key={api_key}\n')
+
 
 
 

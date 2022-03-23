@@ -1,13 +1,21 @@
 import prometeo
 
+TESTING_URL = 'https://test.prometeo.qualia.uy'
+PRODUCTION_URL = 'https://prometeo.qualia.uy'
+
 class SandboxClient(prometeo.banking.BankingAPIClient):
+
     ENVIRONMENTS = {
+        'testing': TESTING_URL,
+        'production': PRODUCTION_URL,
         'sandbox': 'https://banking.sandbox.prometeoapi.com'
     }
 
+
+
 class ClientWrapper(prometeo.Client):
 
-    def __init__(self, api_key, environment='sandbox'):
+    def __init__(self, api_key, environment):
         super().__init__(api_key, environment)
         self._api_key = api_key
         self._environment = environment
@@ -21,9 +29,9 @@ class ClientWrapper(prometeo.Client):
 
 class PrometeoClient(ClientWrapper):
 
-    def __init__(self, api_key):
-        super().__init__(api_key)
-        self._client = ClientWrapper(api_key)
+    def __init__(self, api_key, environment):
+        super().__init__(api_key, environment)
+        self._client = ClientWrapper(api_key, environment=environment)
 
     def login(self, provider, username, password, **kwargs):
         session = self._client.banking.login(provider, username, password, **kwargs)
