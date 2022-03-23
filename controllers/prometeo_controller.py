@@ -23,7 +23,7 @@ class PrometeoActionsController():
         try:
             self._api_key = self._profiler.get_configuration(self._environment)
         except:
-            raise typer.Exit('no config found')
+            print('Create a config')
 
         self._client = PrometeoClient(self._api_key, self._environment)
 
