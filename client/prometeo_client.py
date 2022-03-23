@@ -2,13 +2,14 @@ import prometeo
 
 TESTING_URL = 'https://test.prometeo.qualia.uy'
 PRODUCTION_URL = 'https://prometeo.qualia.uy'
+SANDBOX_URL = 'https://banking.sandbox.prometeoapi.com'
 
 class SandboxClient(prometeo.banking.BankingAPIClient):
 
     ENVIRONMENTS = {
         'testing': TESTING_URL,
         'production': PRODUCTION_URL,
-        'sandbox': 'https://banking.sandbox.prometeoapi.com'
+        'sandbox': SANDBOX_URL
     }
 
 
