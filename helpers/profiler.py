@@ -59,10 +59,15 @@ class Profiler():
         return (config[provider]['username'], b_text.decode())
 
 
-    def exists_section(self, provider):
+    def exists_section_credentials(self, provider):
         config = configparser.ConfigParser()
         config.read(self._credentials_path)
         return provider in config.sections()
+
+    def exists_section_envs(self, env):
+        config = configparser.ConfigParser()
+        config.read(self._config_path)
+        return env in config.sections()
 
 
     def get_configuration(self, profile):
@@ -75,7 +80,7 @@ class Profiler():
 
 
     def add_new_credential(self, provider, username, password):
-        if self.exists_section(provider):
+        if self.exists_section_credentials(provider):
             config = configparser.ConfigParser()
             config.read(self._credentials_path)
             # modify
@@ -90,6 +95,22 @@ class Profiler():
                 fs.write(f'[{provider}]\n')
                 fs.write(f'username={username}\n')
                 fs.write(f'password={password}\n')
+
+    def add_new_environment(self, environment, api_key):
+        if self.exists_section_envs(environment):
+            config = configparser.ConfigParser()
+            config.read(self._config_path)
+            # modify
+            config[environment]['api_key'] = api_key
+
+            # override
+            with open(self._config_path, 'w') as fs:
+                config.write(fs)
+        else:
+            with open(self._config_path, 'a') as fs:
+                fs.write(f'[{environment}]\n')
+                fs.write(f'api_key={api_key}\n')
+
 
 
 

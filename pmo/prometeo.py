@@ -135,9 +135,11 @@ def config(credential: bool = typer.Option(False), environment: bool = typer.Opt
 
     if credential:
         config_controller.add_new_credential()
+        raise typer.Exit('Credential saved')
 
     if environment:
         config_controller.add_new_environment()
+        raise typer.Exit('New environment saved')
 
 
 def _version_callback(value: bool) -> None:

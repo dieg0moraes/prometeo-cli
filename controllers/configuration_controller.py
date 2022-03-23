@@ -25,4 +25,7 @@ class ConfigurationController():
 
 
     def add_new_environment(self):
-        pass
+        environment = typer.prompt('Please enter the environment')
+        api_key = typer.prompt('Please enter the api_key')
+        profiler = Profiler()
+        profiler.add_new_environment(environment, api_key)
