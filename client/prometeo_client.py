@@ -7,7 +7,7 @@ class SandboxClient(prometeo.banking.BankingAPIClient):
 
 class ClientWrapper(prometeo.Client):
 
-    def __init__(self, api_key, environment='sandbox'):
+    def __init__(self, api_key, environment):
         super().__init__(api_key, environment)
         self._api_key = api_key
         self._environment = environment
@@ -15,15 +15,15 @@ class ClientWrapper(prometeo.Client):
 
     @property
     def banking(self):
-        self._banking = SandboxClient(self._api_key, self._environment)
+        self._banking = prometeo.banking.BankingAPIClient(self._api_key, self._environment)
         return self._banking
 
 
 class PrometeoClient(ClientWrapper):
 
-    def __init__(self, api_key):
-        super().__init__(api_key)
-        self._client = ClientWrapper(api_key)
+    def __init__(self, api_key, environment):
+        super().__init__(api_key, environment)
+        self._client = ClientWrapper(api_key, environment=environment)
 
     def login(self, provider, username, password, **kwargs):
         session = self._client.banking.login(provider, username, password, **kwargs)

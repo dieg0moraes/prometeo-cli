@@ -22,9 +22,10 @@ class PrometeoActionsController():
 
         api_key = self._profiler.get_configuration(self._environment)
 
-        self._client = PrometeoClient(api_key)
+        self._client = PrometeoClient(api_key, self._environment)
 
     def login(self, provider: str, interactive = False) -> None:
+        passphrase = typer.prompt('Please enter your passphrase', hide_input=True, confirmation_prompt=True)
 
         try:
             if session.exists_session():
@@ -40,7 +41,7 @@ class PrometeoActionsController():
                 username = typer.prompt('Username')
                 password = getpass()
             else:
-                username, password = self._profiler.get_credentials(provider)
+                username, password = self._profiler.get_credentials(provider, passphrase)
 
             session_key = self._client.login(provider, username, password)
             session.create_session(session_key)
@@ -49,6 +50,7 @@ class PrometeoActionsController():
             raise typer.Exit('Wrong credentials')
 
         except prometeo.exceptions.UnauthorizedError as e:
+            print(e)
             raise typer.Exit('Unknown provider')
         except ProviderNotFound as e:
             raise typer.Exit('Configuration for the given provider not found')
