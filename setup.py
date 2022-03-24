@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="prometeo-cli",
-    version="1.0.0",
+    version="1.0.1",
     author="Diego Moraes",
     author_email="dmoraes11cb@gmail.com",
     description="CLI Tool for the Prometeo Open Banking API",
