@@ -7,7 +7,7 @@ from datetime import datetime
 
 from client.prometeo_client import PrometeoClient
 from helpers import SessionHandler, Profiler
-from exceptions import ProviderNotFound
+from exceptions import ProviderNotFound, ConfigException
 
 session = SessionHandler()
 
@@ -20,15 +20,15 @@ class PrometeoActionsController():
 
         if self._environment is None:
             raise typer.Exit('Please set PROMETEO_ENVIRONMENT')
+
         try:
             self._api_key = self._profiler.get_configuration(self._environment)
-        except:
-            print('Create a config')
+        except ConfigException as e:
+            typer.echo(f'[WARN] You have setted {self._environment} as the default but no config was found')
 
         self._client = PrometeoClient(self._api_key, self._environment)
 
     def login(self, provider: str, interactive = False) -> None:
-        passphrase = typer.prompt('Please enter your passphrase', hide_input=True, confirmation_prompt=True)
 
         try:
             if session.exists_session():
@@ -44,6 +44,7 @@ class PrometeoActionsController():
                 username = typer.prompt('Username')
                 password = getpass()
             else:
+                passphrase = typer.prompt('Please enter your passphrase', hide_input=True, confirmation_prompt=True)
                 username, password = self._profiler.get_credentials(provider, passphrase)
 
             session_key = self._client.login(provider, username, password)
@@ -53,8 +54,7 @@ class PrometeoActionsController():
             raise typer.Exit('Wrong credentials')
 
         except prometeo.exceptions.UnauthorizedError as e:
-            print(e)
-            raise typer.Exit('Unknown provider')
+            raise typer.Exit(e)
         except ProviderNotFound as e:
             raise typer.Exit('Configuration for the given provider not found')
 

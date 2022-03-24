@@ -4,7 +4,7 @@ This module provides the Prometeo CLI.
 # prometeo/prometeo.py
 
 import typer
-
+import prometeo
 from datetime import datetime
 from typing import Optional
 from pathlib import Path
@@ -16,7 +16,6 @@ from helpers import TablePrinter, Profiler
 
 
 app = typer.Typer()
-controller = prometeo_controller.PrometeoActionsController()
 config_controller = configuration_controller.ConfigurationController()
 
 def date_callback(value):
@@ -41,6 +40,7 @@ def login(
     """
     Start a banking session
     """
+    controller = prometeo_controller.PrometeoActionsController()
     typer.echo('Loggin in')
 
     if interactive:
@@ -61,9 +61,14 @@ def logout() -> None:
     """
     Logout
     """
-    typer.echo('Loggin out')
-    controller.logout()
-    typer.echo('Logged out')
+    try:
+        controller = prometeo_controller.PrometeoActionsController()
+        typer.echo('Loggin out')
+        controller.logout()
+    except prometeo.exceptions.InvalidSessionKeyError:
+        pass
+
+    raise typer.Exit('Logged out')
 
 
 @app.command()
@@ -71,6 +76,7 @@ def accounts() -> None:
     """
     Get accounts
     """
+    controller = prometeo_controller.PrometeoActionsController()
     accounts = controller.get_accounts()
     printer = TablePrinter()
     printer.print_accounts(accounts)
@@ -80,6 +86,7 @@ def cards() -> None:
     """
     Get credit cards
     """
+    controller = prometeo_controller.PrometeoActionsController()
     cards = controller.get_cards()
     printer = TablePrinter()
     printer.print_cards(cards)
@@ -106,6 +113,7 @@ def movements(
     """
     Get movements
     """
+    controller = prometeo_controller.PrometeoActionsController()
     validate_movements_params(card, account)
 
     if account and not card:
@@ -122,6 +130,7 @@ def movements(
 
 @app.command()
 def providers():
+    controller = prometeo_controller.PrometeoActionsController()
     providers = controller.get_providers()
     printer = TablePrinter()
     printer.print_providers(providers)
@@ -130,16 +139,18 @@ def providers():
 @app.command()
 def config(credential: bool = typer.Option(False), environment: bool = typer.Option(False)):
 
-    if credential and environment:
+    if credential == True and environment == True:
         raise typer.Exit('Please select only one option')
 
-    if credential:
+    if credential == True:
         config_controller.add_new_credential()
         raise typer.Exit('Credential saved')
 
-    if environment:
+    if environment == True:
         config_controller.add_new_environment()
         raise typer.Exit('New environment saved')
+
+    raise typer.Exit('No option selected')
 
 
 def _version_callback(value: bool) -> None:

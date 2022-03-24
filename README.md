@@ -25,6 +25,7 @@ The `~/.prometeo/` directory stores two configurations files:
 **config [OPTIONS]**
 -
 There are two options: `--credential` for configuring a new set of credentials, and the `--environment` for a new env.
+The environment must match with the one you setted previously in the `PROMETEO_ENVIRONMENT` variable.
 
  **login [OPTIONS]**
 -
