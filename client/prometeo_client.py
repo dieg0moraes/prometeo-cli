@@ -5,6 +5,9 @@ PRODUCTION_URL = 'https://prometeo.qualia.uy'
 SANDBOX_URL = 'https://banking.sandbox.prometeoapi.com'
 
 class SandboxClient(prometeo.banking.BankingAPIClient):
+    """
+    BankingAPIClient override to support sandbox
+    """
 
     ENVIRONMENTS = {
         'testing': TESTING_URL,
@@ -13,32 +16,38 @@ class SandboxClient(prometeo.banking.BankingAPIClient):
     }
 
 
-
 class ClientWrapper(prometeo.Client):
+    """
+    Client wrapper
+    """
 
-    def __init__(self, api_key, environment):
+    def __init__(self, api_key: str, environment: str):
         super().__init__(api_key, environment)
         self._api_key = api_key
         self._environment = environment
 
 
     @property
-    def banking(self):
+    def banking(self) -> SandboxClient:
         self._banking = SandboxClient(self._api_key, self._environment)
         return self._banking
 
 
 class PrometeoClient(ClientWrapper):
 
-    def __init__(self, api_key, environment):
+    """
+    PrometeoClient
+    """
+
+    def __init__(self, api_key: str, environment: str):
         super().__init__(api_key, environment)
         self._client = ClientWrapper(api_key, environment=environment)
 
-    def login(self, provider, username, password, **kwargs):
+    def login(self, provider: str, username: str, password: str, **kwargs) -> str:
         session = self._client.banking.login(provider, username, password, **kwargs)
         return session.get_session_key()
 
-    def logout(self):
+    def logout(self) -> None:
         self._client.banking.logout()
 
 

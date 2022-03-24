@@ -4,6 +4,7 @@ import configparser
 from pathlib import Path
 from exceptions import ProviderNotFound
 from .crypto import Crypto
+from exceptions import ConfigException
 
 class Profiler():
 
@@ -74,7 +75,7 @@ class Profiler():
         config = configparser.ConfigParser()
         config.read(self._config_path)
         if profile not in config.sections():
-            raise Exception(profile, 'Does not exists')
+            raise ConfigException(f'No configuration found for {profile}')
 
         return config[profile]['api_key']
 
